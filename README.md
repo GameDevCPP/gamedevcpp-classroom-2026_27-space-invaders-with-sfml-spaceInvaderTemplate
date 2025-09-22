@@ -438,6 +438,7 @@ void Bullet::Update(const float &dt) {
 Alrighty, that's a barebones Bullet created, now to spawn one. The simplest way to do this would be to do something like this:
 
 
+ 
 ```cpp 
 //ship.cpp
 Player::Update(){...
