@@ -1,8 +1,8 @@
 
 # Space Invaders 
-*These notes are a lightly edited version of the original [ Edinburgh napier University lab3](https://dooglz.github.io/set09121/spaceinvaders1.html) *
+*These notes are a lightly edited version of the original [ Edinburgh Napier University lab3](https://dooglz.github.io/set09121/spaceinvaders1.html) *
 
-This lab is design to revise some Object Orientation(OO) in C++, Working with C++ header files, and a small amount of memory and resource management.
+This lab is designed to revise some Object Orientation(OO) in C++, Working with C++ header files, and a small amount of memory and resource management.
 
 ## Resources for this assignment/lab: 
 Instead of the resources(assets) used in this template, use your own instead e.g.
@@ -85,9 +85,9 @@ The way we are going to go about this to have an *abstract base class*
 
 ### Functionality of the Ship
 
-The ship class will contain all logic that is common for both the player and invaders. Primarily this will be \"moving around\". We could go with the full entity model and have Ship be a base class, with variables for it's position and rotation and such. We would then also have a sf::Sprite member attached where we would call upon all the SFML render logic. This is a good idea -- for a larger game. For space invaders that would involve lots of code to keep the sprite in sync with the ship Entity. Instead we are going to take a super short cut, and inherit from sf::sprite.
+The ship class will contain all logic that is common for both the player and invaders. Primarily this will be \"moving around\". We could go with the full entity model and have Ship be a base class, with variables for its position and rotation and such. We would then also have a sf::Sprite member attached where we would call upon all the SFML render logic. This is a good idea -- for a larger game. For space invaders that would involve lots of code to keep the sprite in sync with the ship Entity. Instead we are going to take a super short cut, and inherit from sf::sprite.
 
-This means that Ship will have all the same methods as a sf::sprite, including all the usual 'SetPostition()' and 'move()' commands we have been using already. It also means we can pass a ship object directly to window.draw().
+This means that Ship will have all the same methods as a sf::sprite, including all the usual 'SetPosition()' and 'move()' commands we have been using already. It also means we can pass a ship object directly to window.draw().
 
 ### Create Ship.h
 
@@ -293,7 +293,7 @@ Invaders Update() to include some movement code.
 
 ```cpp 
 //ship.cpp
-#include game.h
+#include "game.h"
 
 void Invader::Update(const float &dt) {
     Ship::Update(dt);
@@ -375,7 +375,7 @@ void Player::Update(const float &dt) {
 }
 ```
 
-You should know how to add in the movement code, it's almost identical to Pong. Bonus points for not allowing it to move off-screen. You should construct one player at load time. You could add it to the vector of ships, but rember the hacky line in invader's update: `ships[i]->move(0, 24);`? This would also move the player. Not good. To solve this you can either
+You should know how to add in the movement code, it's almost identical to Pong. Bonus points for not allowing it to move off-screen. You should construct one player at load time. You could add it to the vector of ships, but remember the hacky line in invader's update: `ships[i]->move(0, 24);`? This would also move the player. Not good. To solve this you can either
 - A: Have the player separate from the ship list, and manually update and render it. **Bad option**
 - B: Change the invader update to only move invaders down. **Good option!**
 
@@ -394,7 +394,7 @@ The game wouldn't be very difficult (or possible) without bullets firing around.
 
 If we look at our sprite-sheet we have two different bullet sprites. SFML can do some colour replacement, so if we wanted we could use the same white sprites for both bullet types and get SFML to colour them differently. As we want the two bullet types to look physically different, however, we will use two different sprites. Whatever visuals we decide to go with, for our software design we will be inheriting from sf::Sprite again.
 
-That's the plan for rendering out of the way, so now just movement and explosions to figure out! It would be tempting to do as we did with Ship and have two sublcasses for invader and player bullets. But as they are both so similar (the only difference being the direction they travel and who they collide with) having a three class structure would be overkill. Sometimes rigorously following OO patterns isn't the best way forward, especially with games. So instead we will build just bullet class.
+That's the plan for rendering out of the way, so now just movement and explosions to figure out! It would be tempting to do as we did with Ship and have two sublcasses for invader and player bullets. But as they are both so similar (the only difference being the direction they travel and who they collide with) having a three class structure would be overkill. Sometimes rigorously following OO patterns isn't the best way forward, especially with games. So instead we will build just a bullet class.
 
 Create a bullet.h and bullet.cpp and add the following:
 
@@ -462,12 +462,12 @@ about the other issues. What we could do is something like this:
 ```cpp 
 //ship.cpp
 Player::Update(){...
-  static vector<bullet*> bullets;
+  static vector<Bullet*> bullets;
   if (Keyboard::isKeyPressed(...)) {
     bullets.push_back(new Bullet(getPosition(), false));
   }
   for (const auto s : bullets) {
-    bullets.Update(dt);
+    s->Update(dt);
   }
 ```
 
@@ -477,13 +477,13 @@ Yes, we will be firing loads of bullets, and we don't want to have keep track th
 
 ### A different solution - Bullet Pools
 
-How about instead of creating bullets as and when we need them, we allocate a whole bunch at the start, and put them into a \"pool of available bullets\". When a player or an invader fires, an inactive bullet in the pool gets initialised to the correct position and mode and goes about it's bullety business. After this bullet has exploded or moved off-screen, it is moved back into the pool (or just set to \"inactive\").
+How about instead of creating bullets as and when we need them, we allocate a whole bunch at the start, and put them into a \"pool of available bullets\". When a player or an invader fires, an inactive bullet in the pool gets initialised to the correct position and mode and goes about its bullety business. After this bullet has exploded or moved off-screen, it is moved back into the pool (or just set to \"inactive\").
 
 This is a very common technique used in games with lots of expensive things coming into and out of existence. Almost every AAA Unity3D game uses this with GameObjects -- which take forever to allocate and construct. It's much quicker to allocate loads at the start and re-use them.
 
 #### Storing the Bullet Pool
 
-Each Ship could have it's own pool of 3 or 4 bullets to re-use, but that's a lot of code to refactor. Instead let's store the bullet pool *inside* the bullet class.
+Each Ship could have its own pool of 3 or 4 bullets to re-use, but that's a lot of code to refactor. Instead let's store the bullet pool *inside* the bullet class.
 
 
 ```cpp 
@@ -500,7 +500,7 @@ class Bullet : public sf::Sprite {
 
 ```
 
-We have statically allocated 256 bullets on the stack. We have brought along a sneaky unsigned char to do a clever trick to determine which bullet to use next. Unisgned chars go between 0 and 255, and then wrap round back to 0 and repeat. Therefore every time we Fire() a bullet we choose from the array like this \"bullets\[++bulletPointer\]\". If there were ever more than 256 bullets on screen we will run into trouble, but I won't worry about this if you don't. In fact, if we are clever, we would just reuse the oldest bullet and with so many of them around, players would likely never even notice!
+We have statically allocated 256 bullets on the stack. We have brought along a sneaky unsigned char to do a clever trick to determine which bullet to use next. Unsigned chars go between 0 and 255, and then wrap round back to 0 and repeat. Therefore every time we Fire() a bullet we choose from the array like this \"bullets\[++bulletPointer\]\". If there were ever more than 256 bullets on screen we will run into trouble, but I won't worry about this if you don't. In fact, if we are clever, we would just reuse the oldest bullet and with so many of them around, players would likely never even notice!
 
 We will need to change our Firing mechanism, we now don't want to ever construct a bullet, just Fire() one. We will have to change our class declaration around to suit this. Fire() will become a static function.
 
@@ -513,7 +513,7 @@ public:
   static void Update(const float &dt);
   //Render's All bullets
   static void Render(sf::RenderWindow &window);
-  //Chose an inactive bullet and use it.
+  //Choose an inactive bullet and use it.
   static void Fire(const sf::Vector2f &pos, const bool mode);
   
   ~Bullet()=default;
@@ -532,7 +532,7 @@ protected:
 I'll let you figure out the changes to the bullet.cpp. Keep in mind the differences between static-and non static functions. The _Update() function is given in the next section.
 
 
-**If you are getting unresolved external symbol errors, remember the top hint from before! (Also, make you you have a constructor in bullet.cpp)**
+**If you are getting unresolved external symbol errors, remember the top hint from before! (Also, make sure you have a constructor in bullet.cpp)**
 
 #### Exploding Things
 
@@ -552,7 +552,7 @@ void Bullet::_Update(const float &dt) {
         
         for (auto s : ships) {
             if (!_mode && s == player) {
-                //player bulelts don't collide with player
+                //player bullets don't collide with player
                 continue;
             }
             if (_mode && s != player) {
@@ -645,7 +645,7 @@ Invaders should shoot somewhat randomly. How you do this is up to you, when it c
 My hacky / beautiful solution was this:
 
 ```cpp 
-//sghip.cpp
+//ship.cpp
 void Invader::Update(const float &dt) {
   ...
   static float firetime = 0.0f;
@@ -662,7 +662,7 @@ I've limited so an invader won't be able to fire more than once in four seconds.
 
 ## Fading the Explosion sprite
 
-At the moment our implementation turns a invader into the explosion sprite when it explodes, an the explosion remains in space. We need it to fade out over time. To do ths we will use a similar technique as the bullet timer, where we will have a cooldown timer that starts when the ship explodes, and once the timer hit's 0, the invader is moved off the screen or turned invisible.
+At the moment our implementation turns an invader into the explosion sprite when it explodes, and the explosion remains in space. We need it to fade out over time. To do this we will use a similar technique as the bullet timer, where we will have a cooldown timer that starts when the ship explodes, and once the timer hits 0, the invader is moved off the screen or turned invisible.
 
 I'll leave the code for this up to you.
 
