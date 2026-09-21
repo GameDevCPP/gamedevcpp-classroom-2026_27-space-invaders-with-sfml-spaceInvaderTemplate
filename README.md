@@ -63,7 +63,7 @@ If this happens, it's most likely that you are failing to load the sprite sheet 
 3. You have updated your CMake code to ensure that your new project's resources are copied correctly, yeah?
 4. It's most likely point 3 that you forgot (speaking from experience), so check again!
 
-For point 3, remember to go and read [Runtime Resources tips and tricks](resources) again. The process should be easier once that is done, compared to the manual process you did with fonts in the Pong example!
+For point 3, remember to go and read [Runtime Resources tips and tricks](src/resources.md) again. The process should be easier once that is done, compared to the manual process you did with fonts in the Pong example!
 
 
 **If you've set up everything correctly, you should be able to run the .exe in your build folder directly, without copying files yourself!**
